@@ -81,6 +81,7 @@ async function analyzeCode(
 function createPrompt(file: File, chunk: Chunk, prDetails: PRDetails): string {
   return `Sua tarefa é revisar pull requests. Instruções:
 - Forneça a resposta no seguinte formato JSON: {"reviews": [{"lineNumber": <numero_da_linha>, "reviewComment": "<comentário da revisão>"}]}
+- TODOS os comentários devem ser escritos em PORTUGUÊS.
 - Não faça comentários positivos ou elogios.
 - Forneça comentários e sugestões SOMENTE se houver algo a melhorar, caso contrário "reviews" deve ser um array vazio.
 - Escreva o comentário em Markdown do GitHub.
@@ -101,7 +102,7 @@ Diff do código a ser revisado:
 \`\`\`diff
 ${chunk.content}
 ${chunk.changes
-      // @ts-expect-error - ln e ln2 existem onde necessário
+      // @ts-expect-error - ln and ln2 exists where needed
       .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
       .join("\n")}
 \`\`\`
