@@ -1,9 +1,9 @@
-import { readFileSync } from "fs";
 import * as core from "@actions/core";
-import OpenAI from "openai";
 import { Octokit } from "@octokit/rest";
-import parseDiff, { Chunk, File } from "parse-diff";
+import { readFileSync } from "fs";
 import minimatch from "minimatch";
+import OpenAI from "openai";
+import parseDiff, { Chunk, File } from "parse-diff";
 
 const GITHUB_TOKEN: string = core.getInput("GITHUB_TOKEN");
 const OPENAI_API_KEY: string = core.getInput("OPENAI_API_KEY");
@@ -79,33 +79,31 @@ async function analyzeCode(
 }
 
 function createPrompt(file: File, chunk: Chunk, prDetails: PRDetails): string {
-  return `Your task is to review pull requests. Instructions:
-- Provide the response in following JSON format:  {"reviews": [{"lineNumber":  <line_number>, "reviewComment": "<review comment>"}]}
-- Do not give positive comments or compliments.
-- Provide comments and suggestions ONLY if there is something to improve, otherwise "reviews" should be an empty array.
-- Write the comment in GitHub Markdown format.
-- Use the given description only for the overall context and only comment the code.
-- IMPORTANT: NEVER suggest adding comments to the code.
+  return `Sua tarefa é revisar pull requests. Instruções:
+- Forneça a resposta no seguinte formato JSON: {"reviews": [{"lineNumber": <numero_da_linha>, "reviewComment": "<comentário da revisão>"}]}
+- Não faça comentários positivos ou elogios.
+- Forneça comentários e sugestões SOMENTE se houver algo a melhorar, caso contrário "reviews" deve ser um array vazio.
+- Escreva o comentário em Markdown do GitHub.
+- Utilize a descrição apenas para contexto geral e comente somente o código.
+- IMPORTANTE: NUNCA sugira adicionar comentários ao código.
 
-Review the following code diff in the file "${
-    file.to
-  }" and take the pull request title and description into account when writing the response.
-  
-Pull request title: ${prDetails.title}
-Pull request description:
+Revise o seguinte diff do arquivo "${file.to}" considerando o título e a descrição do pull request.
+
+Título do pull request: ${prDetails.title}
+Descrição do pull request:
 
 ---
 ${prDetails.description}
 ---
 
-Git diff to review:
+Diff do código a ser revisado:
 
 \`\`\`diff
 ${chunk.content}
 ${chunk.changes
-  // @ts-expect-error - ln and ln2 exists where needed
-  .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
-  .join("\n")}
+      // @ts-expect-error - ln e ln2 existem onde necessário
+      .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
+      .join("\n")}
 \`\`\`
 `;
 }
