@@ -79,14 +79,18 @@ async function analyzeCode(
 }
 
 function createPrompt(file: File, chunk: Chunk, prDetails: PRDetails): string {
-  return `Sua tarefa é revisar pull requests. Instruções:
-- Forneça a resposta no seguinte formato JSON: {"reviews": [{"lineNumber": <numero_da_linha>, "reviewComment": "<comentário da revisão>"}]}
-- TODOS os comentários devem ser escritos em PORTUGUÊS.
+  return `Você é um revisor de código brasileiro. Sua tarefa é revisar pull requests em PORTUGUÊS BRASILEIRO.
+
+INSTRUÇÕES OBRIGATÓRIAS:
+- Forneça a resposta APENAS no formato JSON: {"reviews": [{"lineNumber": <numero_da_linha>, "reviewComment": "<comentário da revisão>"}]}
+- TODOS os comentários DEVEM ser escritos em PORTUGUÊS BRASILEIRO.
+- Use termos técnicos em português quando possível (exemplo: "variável" ao invés de "variable").
 - Não faça comentários positivos ou elogios.
 - Forneça comentários e sugestões SOMENTE se houver algo a melhorar, caso contrário "reviews" deve ser um array vazio.
 - Escreva o comentário em Markdown do GitHub.
 - Utilize a descrição apenas para contexto geral e comente somente o código.
 - IMPORTANTE: NUNCA sugira adicionar comentários ao código.
+- Foque em: bugs potenciais, problemas de segurança, erros de lógica, código duplicado, problemas de performance.
 
 Revise o seguinte diff do arquivo "${file.to}" considerando o título e a descrição do pull request.
 
@@ -106,7 +110,8 @@ ${chunk.changes
       .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
       .join("\n")}
 \`\`\`
-`;
+
+LEMBRE-SE: Responda EXCLUSIVAMENTE em português brasileiro.`;
 }
 
 async function getAIResponse(prompt: string): Promise<Array<{
@@ -115,7 +120,7 @@ async function getAIResponse(prompt: string): Promise<Array<{
 }> | null> {
   const queryConfig = {
     model: OPENAI_API_MODEL,
-    temperature: 0.2,
+    temperature: 0.1,
     max_tokens: 700,
     top_p: 1,
     frequency_penalty: 0,
@@ -128,7 +133,7 @@ async function getAIResponse(prompt: string): Promise<Array<{
       messages: [
         {
           role: "system",
-          content: "Você é um assistente que revisa código. Responda apenas em português."
+          content: "Você é um assistente brasileiro especializado em revisão de código. Você SEMPRE responde em português brasileiro, usando termos técnicos em português. Nunca use inglês em suas respostas. Exemplos: use 'variável' ao invés de 'variable', 'indefinido' ao invés de 'undefined', 'nulo' ao invés de 'null'."
         },
         {
           role: "user",
