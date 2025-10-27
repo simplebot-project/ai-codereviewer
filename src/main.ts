@@ -125,10 +125,6 @@ async function getAIResponse(prompt: string): Promise<Array<{
   try {
     const response = await openai.chat.completions.create({
       ...queryConfig,
-      // return JSON if the model supports it:
-      ...(OPENAI_API_MODEL === "gpt-4-1106-preview"
-        ? { response_format: { type: "json_object" } }
-        : {}),
       messages: [
         {
           role: "system",
@@ -137,10 +133,21 @@ async function getAIResponse(prompt: string): Promise<Array<{
       ],
     });
 
-    const res = response.choices[0].message?.content?.trim() || "{}";
+    let res = response.choices[0].message?.content || "{}";
+
+    // Remove ```json ou ``` e qualquer espaço extra
+    res = res.replace(/```(json)?/gi, "").trim();
+
+    // Garante que só pegue a primeira chave JSON válida
+    const firstCurly = res.indexOf("{");
+    const lastCurly = res.lastIndexOf("}");
+    if (firstCurly !== -1 && lastCurly !== -1) {
+      res = res.slice(firstCurly, lastCurly + 1);
+    }
+
     return JSON.parse(res).reviews;
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error parsing AI response:", error);
     return null;
   }
 }
